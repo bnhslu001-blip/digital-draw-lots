@@ -60,6 +60,21 @@ Slot 8</textarea>
     let currentAngle = 0;
     let isSpinning = false;
     const colors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e'];
+    const TAU = Math.PI * 2;
+    const NUM_SEGMENTS = 8;
+    const SEGMENT_ANGLE = TAU / NUM_SEGMENTS;
+    
+    function normalizeAngle(angle) {
+      angle = angle % TAU;
+      if (angle < 0) angle += TAU;
+      return angle;
+    }
+    
+    function getWinnerIndex(angle) {
+      // Pointer is at the TOP (-PI/2 radians)
+      const pointerAngle = normalizeAngle(-Math.PI / 2 - angle);
+      return Math.floor(pointerAngle / SEGMENT_ANGLE) % NUM_SEGMENTS;
+    }
     
     function loadItems() {
       items = textarea.value.split('\n').map(s => s.trim()).filter(s => s).slice(0,8);
@@ -71,13 +86,12 @@ Slot 8</textarea>
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = Math.min(centerX, centerY) - 10;
-      const sliceAngle = (2 * Math.PI) / 8;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      for (let i = 0; i < 8; i++) {
-        const startAngle = currentAngle + i * sliceAngle;
-        const endAngle = startAngle + sliceAngle;
+      for (let i = 0; i < NUM_SEGMENTS; i++) {
+        const startAngle = currentAngle + i * SEGMENT_ANGLE - Math.PI / 2;
+        const endAngle = startAngle + SEGMENT_ANGLE;
         
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
@@ -89,13 +103,15 @@ Slot 8</textarea>
         ctx.lineWidth = 2;
         ctx.stroke();
         
+        const midAngle = startAngle + SEGMENT_ANGLE / 2;
         ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(startAngle + sliceAngle / 2);
-        ctx.textAlign = 'right';
+        ctx.translate(centerX + Math.cos(midAngle) * (radius - 25), 
+                      centerY + Math.sin(midAngle) * (radius - 25));
+        ctx.rotate(midAngle + Math.PI / 2);
+        ctx.textAlign = 'center';
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(items[i], radius - 15, 6);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(items[i], 0, 5);
         ctx.restore();
       }
     }
@@ -107,7 +123,7 @@ Slot 8</textarea>
       resultDisplay.textContent = '';
       
       const spinDuration = 4000;
-      const totalRotation = (Math.random() * 5 + 5) * (2 * Math.PI);
+      const totalRotation = (Math.random() * 5 + 5) * TAU;
       const startTime = performance.now();
       const startAngle = currentAngle;
       
@@ -122,9 +138,8 @@ Slot 8</textarea>
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          currentAngle = currentAngle % (2 * Math.PI);
-          const normalized = (2 * Math.PI - currentAngle + Math.PI / 8) % (2 * Math.PI);
-          const winnerIndex = Math.floor(normalized / (2 * Math.PI / 8)) % 8;
+          currentAngle = normalizeAngle(currentAngle);
+          const winnerIndex = getWinnerIndex(currentAngle);
           
           resultDisplay.innerHTML = `🎉 Winner: <span style="color:#e74c3c">${items[winnerIndex]}</span>`;
           isSpinning = false;
