@@ -122,21 +122,18 @@ Slot 8</textarea>
       }
     }
     
-    function getWinner() {
-      // Normalize rotation to 0 → 2π
-      let normalized = rotation % (Math.PI * 2);
-      if (normalized < 0) normalized += Math.PI * 2;
-      
-      // The wheel rotates clockwise — convert so we can find which segment is at the TOP
-      let position = (Math.PI * 2 - normalized + Math.PI / 20) % (Math.PI * 2);
-      
-      // Which slice is at the pointer?
-      let index = Math.floor(position / SLICE_ANGLE);
-      
-      // Debug info
-      debugInfo.innerHTML = `Debug: Rotation=${(rotation*180/Math.PI).toFixed(1)}° | Index=${index} | Item=${items[index]}`;
-      
-      return index;
+   function getWinner() {
+  // Normalize wheel rotation
+  const fullCircle = Math.PI * 2;
+  const normalized = ((rotation % fullCircle) + fullCircle) % fullCircle;
+
+  // The pointer is at the top (-90 degrees)
+  // Find the wheel's segment currently under the pointer
+  const pointerAngle = (fullCircle - normalized) % fullCircle;
+
+  const index = Math.floor(pointerAngle / SLICE_ANGLE);
+
+  return index;
     }
     
     function spinWheel() {
