@@ -11,7 +11,19 @@
     .container { background: white; border-radius: 24px; padding: 35px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 450px; width: 100%; }
     .wheel-container { position: relative; width: 320px; height: 320px; margin: 0 auto 25px; }
     canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.15); }
-    .pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 35px solid #e74c3c; z-index: 10; filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.3)); }
+    .pointer { 
+      position: absolute; 
+      top: -10px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      width: 0; 
+      height: 0; 
+      border-left: 20px solid transparent; 
+      border-right: 20px solid transparent; 
+      border-top: 40px solid #e74c3c; 
+      z-index: 10; 
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
     button { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; padding: 14px 40px; font-size: 1.15rem; border-radius: 50px; cursor: pointer; font-weight: bold; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(231,76,60,0.4); }
     button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231,76,60,0.5); }
     button:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -21,6 +33,7 @@
     textarea { width: 100%; height: 130px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem; resize: none; }
     textarea:focus { outline: none; border-color: #667eea; }
     .update-btn { margin-top: 12px; background: #667eea; padding: 9px 20px; font-size: 0.95rem; }
+    .debug-info { margin-top: 15px; font-size: 0.85rem; color: #888; background: #f9f9f9; padding: 10px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -46,6 +59,7 @@ Slot 8</textarea>
       <br>
       <button class="update-btn" id="updateBtn">🔄 Update Wheel</button>
     </div>
+    <div class="debug-info" id="debugInfo"></div>
   </div>
 
   <script>
@@ -54,48 +68,37 @@ Slot 8</textarea>
     const spinBtn = document.getElementById('spinBtn');
     const updateBtn = document.getElementById('updateBtn');
     const resultDisplay = document.getElementById('result');
+    const debugInfo = document.getElementById('debugInfo');
     const textarea = document.getElementById('slotItems');
     
     let items = [];
-    let currentAngle = 0;
+    let rotation = 0;
     let isSpinning = false;
     const colors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e'];
-    const TAU = Math.PI * 2;
-    const NUM_SEGMENTS = 8;
-    const SEGMENT_ANGLE = TAU / NUM_SEGMENTS;
-    
-    function normalizeAngle(angle) {
-      angle = angle % TAU;
-      if (angle < 0) angle += TAU;
-      return angle;
-    }
-    
-    function getWinnerIndex(angle) {
-      // Pointer is at the TOP (-PI/2 radians)
-      const pointerAngle = normalizeAngle(-Math.PI / 2 - angle);
-      return Math.floor(pointerAngle / SEGMENT_ANGLE) % NUM_SEGMENTS;
-    }
+    const SEGMENTS = 8;
+    const SLICE_ANGLE = (Math.PI * 2) / SEGMENTS;
     
     function loadItems() {
-      items = textarea.value.split('\n').map(s => s.trim()).filter(s => s).slice(0,8);
-      while (items.length < 8) items.push(`Slot ${items.length+1}`);
+      items = textarea.value.split('\n').map(s => s.trim()).filter(s => s).slice(0, SEGMENTS);
+      while (items.length < SEGMENTS) items.push(`Slot ${items.length+1}`);
     }
     
     function drawWheel() {
       loadItems();
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(centerX, centerY) - 10;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const r = Math.min(cx, cy) - 10;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      for (let i = 0; i < NUM_SEGMENTS; i++) {
-        const startAngle = currentAngle + i * SEGMENT_ANGLE - Math.PI / 2;
-        const endAngle = startAngle + SEGMENT_ANGLE;
+      for (let i = 0; i < SEGMENTS; i++) {
+        // Each segment starts at the TOP and goes clockwise
+        const startAngle = rotation + i * SLICE_ANGLE - Math.PI / 2;
+        const endAngle = startAngle + SLICE_ANGLE;
         
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
         ctx.closePath();
         ctx.fillStyle = colors[i];
         ctx.fill();
@@ -103,17 +106,37 @@ Slot 8</textarea>
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        const midAngle = startAngle + SEGMENT_ANGLE / 2;
+        // Draw text in middle of each segment
+        const midAngle = startAngle + SLICE_ANGLE / 2;
         ctx.save();
-        ctx.translate(centerX + Math.cos(midAngle) * (radius - 25), 
-                      centerY + Math.sin(midAngle) * (radius - 25));
+        ctx.translate(
+          cx + Math.cos(midAngle) * (r - 35),
+          cy + Math.sin(midAngle) * (r - 35)
+        );
         ctx.rotate(midAngle + Math.PI / 2);
-        ctx.textAlign = 'center';
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 13px Arial';
+        ctx.textAlign = 'center';
         ctx.fillText(items[i], 0, 5);
         ctx.restore();
       }
+    }
+    
+    function getWinner() {
+      // Normalize rotation to 0 → 2π
+      let normalized = rotation % (Math.PI * 2);
+      if (normalized < 0) normalized += Math.PI * 2;
+      
+      // The wheel rotates clockwise — convert so we can find which segment is at the TOP
+      let position = (Math.PI * 2 - normalized + Math.PI / 20) % (Math.PI * 2);
+      
+      // Which slice is at the pointer?
+      let index = Math.floor(position / SLICE_ANGLE);
+      
+      // Debug info
+      debugInfo.innerHTML = `Debug: Rotation=${(rotation*180/Math.PI).toFixed(1)}° | Index=${index} | Item=${items[index]}`;
+      
+      return index;
     }
     
     function spinWheel() {
@@ -121,27 +144,27 @@ Slot 8</textarea>
       isSpinning = true;
       spinBtn.disabled = true;
       resultDisplay.textContent = '';
+      debugInfo.textContent = 'Spinning...';
       
-      const spinDuration = 4000;
-      const totalRotation = (Math.random() * 5 + 5) * TAU;
+      const duration = 4000;
+      const spins = 5 + Math.random() * 4; // 5-9 full rotations
+      const totalRotation = spins * Math.PI * 2;
+      const startRotation = rotation;
       const startTime = performance.now();
-      const startAngle = currentAngle;
       
-      function animate(timestamp) {
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / spinDuration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 4);
-        currentAngle = startAngle + totalRotation * easeOut;
+      function animate(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        rotation = startRotation + totalRotation * ease;
         
         drawWheel();
         
-        if (progress < 1) {
+        if (t < 1) {
           requestAnimationFrame(animate);
         } else {
-          currentAngle = normalizeAngle(currentAngle);
-          const winnerIndex = getWinnerIndex(currentAngle);
-          
-          resultDisplay.innerHTML = `🎉 Winner: <span style="color:#e74c3c">${items[winnerIndex]}</span>`;
+          const idx = getWinner();
+          resultDisplay.innerHTML = `🎉 Winner: <span style="color:#e74c3c; font-size:1.8rem">${items[idx]}</span>`;
           isSpinning = false;
           spinBtn.disabled = false;
         }
@@ -151,8 +174,9 @@ Slot 8</textarea>
     
     spinBtn.addEventListener('click', spinWheel);
     updateBtn.addEventListener('click', () => {
-      currentAngle = 0;
+      rotation = 0;
       resultDisplay.textContent = '';
+      debugInfo.textContent = '';
       drawWheel();
     });
     
