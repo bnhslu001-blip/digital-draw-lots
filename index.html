@@ -1,54 +1,205 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎲 Draw Lots — 8 Slots</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; }
-    h1 { color: white; margin-bottom: 25px; font-size: 2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .container { background: white; border-radius: 24px; padding: 35px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 450px; width: 100%; }
-    .wheel-container { position: relative; width: 320px; height: 320px; margin: 0 auto 25px; }
-    canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.15); }
-    .pointer { 
-      position: absolute; 
-      top: -10px; 
-      left: 50%; 
-      transform: translateX(-50%); 
-      width: 0; 
-      height: 0; 
-      border-left: 20px solid transparent; 
-      border-right: 20px solid transparent; 
-      border-top: 40px solid #e74c3c; 
-      z-index: 10; 
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    }
-    button { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; padding: 14px 40px; font-size: 1.15rem; border-radius: 50px; cursor: pointer; font-weight: bold; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(231,76,60,0.4); }
-    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231,76,60,0.5); }
-    button:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
-    .result { margin-top: 25px; font-size: 1.5rem; font-weight: bold; color: #2c3e50; min-height: 45px; }
-    .slots-input { margin-top: 20px; text-align: left; }
-    .slots-input label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-    textarea { width: 100%; height: 130px; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem; resize: none; }
-    textarea:focus { outline: none; border-color: #667eea; }
-    .update-btn { margin-top: 12px; background: #667eea; padding: 9px 20px; font-size: 0.95rem; }
-    .debug-info { margin-top: 15px; font-size: 0.85rem; color: #888; background: #f9f9f9; padding: 10px; border-radius: 8px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 Digital Draw Lots</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 25px 12px;
+}
+
+h1 {
+  color: white;
+  margin-bottom: 22px;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.container {
+  background: white;
+  border-radius: 24px;
+  padding: 25px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  text-align: center;
+  max-width: 460px;
+  width: 100%;
+}
+
+.wheel-container {
+  position: relative;
+  width: min(320px, 100%);
+  aspect-ratio: 1;
+  margin: 0 auto 25px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0,0,0,0.15);
+}
+
+.pointer {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 40px solid #e74c3c;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+button {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 14px 30px;
+  font-size: 1.05rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 5px;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result {
+  margin-top: 20px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #2c3e50;
+  min-height: 45px;
+  overflow-wrap: anywhere;
+}
+
+.slots-input {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.slots-input label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+textarea {
+  width: 100%;
+  height: 130px;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.update-btn {
+  background: #667eea;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.reset-btn {
+  background: #34495e;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.history {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f4f5f9;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.history h3 {
+  margin-bottom: 10px;
+  color: #34495e;
+}
+
+#historyList {
+  line-height: 1.8;
+  color: #555;
+  overflow-wrap: anywhere;
+}
+
+.remaining {
+  margin-top: 15px;
+  color: #667eea;
+  font-weight: bold;
+}
+
+@media(max-width: 400px) {
+  .container {
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+}
+</style>
 </head>
+
 <body>
-  <h1>🎲 Draw Lots — 8 Slots</h1>
-  <div class="container">
-    <div class="wheel-container">
-      <div class="pointer"></div>
-      <canvas id="wheel" width="320" height="320"></canvas>
-    </div>
-    <button id="spinBtn">🎯 SPIN THE WHEEL</button>
-    <div class="result" id="result"></div>
-    
-    <div class="slots-input">
-      <label>Edit your 8 items (one per line):</label>
-      <textarea id="slotItems">Slot 1
+
+<h1>🎲 DIGITAL DRAW LOTS</h1>
+
+<div class="container">
+
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="640" height="640"></canvas>
+  </div>
+
+  <button id="spinBtn">🎯 SPIN THE WHEEL</button>
+
+  <div class="result" id="result">
+    Ready to draw!
+  </div>
+
+  <div class="remaining" id="remaining"></div>
+
+  <div class="slots-input">
+
+    <label>Edit your 8 items (one per line):</label>
+
+    <textarea id="slotItems">Slot 1
 Slot 2
 Slot 3
 Slot 4
@@ -56,128 +207,365 @@ Slot 5
 Slot 6
 Slot 7
 Slot 8</textarea>
-      <br>
-      <button class="update-btn" id="updateBtn">🔄 Update Wheel</button>
-    </div>
-    <div class="debug-info" id="debugInfo"></div>
+
+    <button class="update-btn" id="updateBtn">
+      🔄 Update Wheel
+    </button>
+
   </div>
 
-  <script>
-    const canvas = document.getElementById('wheel');
-    const ctx = canvas.getContext('2d');
-    const spinBtn = document.getElementById('spinBtn');
-    const updateBtn = document.getElementById('updateBtn');
-    const resultDisplay = document.getElementById('result');
-    const debugInfo = document.getElementById('debugInfo');
-    const textarea = document.getElementById('slotItems');
-    
-    let items = [];
-    let rotation = 0;
-    let isSpinning = false;
-    const colors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e'];
-    const SEGMENTS = 8;
-    const SLICE_ANGLE = (Math.PI * 2) / SEGMENTS;
-    
-    function loadItems() {
-      items = textarea.value.split('\n').map(s => s.trim()).filter(s => s).slice(0, SEGMENTS);
-      while (items.length < SEGMENTS) items.push(`Slot ${items.length+1}`);
-    }
-    
-    function drawWheel() {
-      loadItems();
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const r = Math.min(cx, cy) - 10;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      for (let i = 0; i < SEGMENTS; i++) {
-        // Each segment starts at the TOP and goes clockwise
-        const startAngle = rotation + i * SLICE_ANGLE - Math.PI / 2;
-        const endAngle = startAngle + SLICE_ANGLE;
-        
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = colors[i];
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Draw text in middle of each segment
-        const midAngle = startAngle + SLICE_ANGLE / 2;
-        ctx.save();
-        ctx.translate(
-          cx + Math.cos(midAngle) * (r - 35),
-          cy + Math.sin(midAngle) * (r - 35)
-        );
-        ctx.rotate(midAngle + Math.PI / 2);
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 13px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(items[i], 0, 5);
-        ctx.restore();
-      }
-    }
-    
-   function getWinner() {
-  // Normalize wheel rotation
-  const fullCircle = Math.PI * 2;
-  const normalized = ((rotation % fullCircle) + fullCircle) % fullCircle;
+  <div class="history">
 
-  // The pointer is at the top (-90 degrees)
-  // Find the wheel's segment currently under the pointer
-  const pointerAngle = (fullCircle - normalized) % fullCircle;
+    <h3>🏆 Draw History</h3>
 
-  const index = Math.floor(pointerAngle / SLICE_ANGLE);
+    <div id="historyList">
+      No winners yet.
+    </div>
+
+  </div>
+
+  <button class="reset-btn" id="resetBtn">
+    ↻ RESET DRAW
+  </button>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+const spinBtn = document.getElementById("spinBtn");
+const updateBtn = document.getElementById("updateBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const resultDisplay = document.getElementById("result");
+const historyList = document.getElementById("historyList");
+const remainingDisplay = document.getElementById("remaining");
+const textarea = document.getElementById("slotItems");
+
+const SEGMENTS = 8;
+const FULL_CIRCLE = Math.PI * 2;
+const SLICE_ANGLE = FULL_CIRCLE / SEGMENTS;
+
+const colors = [
+  "#e74c3c",
+  "#3498db",
+  "#2ecc71",
+  "#f39c12",
+  "#9b59b6",
+  "#1abc9c",
+  "#e67e22",
+  "#34495e"
+];
+
+let items = [];
+let remaining = [];
+let history = [];
+
+let rotation = 0;
+let isSpinning = false;
+
+function loadItems() {
+
+  const enteredItems = textarea.value
+    .split("\n")
+    .map(item => item.trim());
+
+  if (
+    enteredItems.length !== SEGMENTS ||
+    enteredItems.some(item => item === "")
+  ) {
+    alert("Please enter exactly 8 non-empty items.");
+    return false;
+  }
+
+  items = enteredItems;
+
+  return true;
+}
+
+function drawWheel() {
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const radius = cx - 15;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < SEGMENTS; i++) {
+
+    const startAngle =
+      rotation + i * SLICE_ANGLE - Math.PI / 2;
+
+    const endAngle =
+      startAngle + SLICE_ANGLE;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+
+    ctx.arc(
+      cx,
+      cy,
+      radius,
+      startAngle,
+      endAngle
+    );
+
+    ctx.closePath();
+
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Draw slot text
+
+    const midAngle =
+      startAngle + SLICE_ANGLE / 2;
+
+    ctx.save();
+
+    ctx.translate(
+      cx + Math.cos(midAngle) * (radius * 0.65),
+      cy + Math.sin(midAngle) * (radius * 0.65)
+    );
+
+    ctx.rotate(midAngle + Math.PI / 2);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 25px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    let label = items[i];
+
+    if (label.length > 14) {
+      label = label.substring(0, 13) + "...";
+    }
+
+    ctx.fillText(label, 0, 0);
+
+    ctx.restore();
+  }
+
+  // Center circle
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 28, 0, FULL_CIRCLE);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+}
+
+// ACCURATE WINNER CALCULATION
+// The pointer is fixed at the top of the wheel.
+
+function getWinner() {
+
+  const normalized =
+    ((rotation % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
+
+  const pointerAngle =
+    (FULL_CIRCLE - normalized) % FULL_CIRCLE;
+
+  const index =
+    Math.floor(pointerAngle / SLICE_ANGLE);
 
   return index;
-    }
-    
-    function spinWheel() {
-      if (isSpinning) return;
-      isSpinning = true;
-      spinBtn.disabled = true;
-      resultDisplay.textContent = '';
-      debugInfo.textContent = 'Spinning...';
-      
-      const duration = 4000;
-      const spins = 5 + Math.random() * 4; // 5-9 full rotations
-      const totalRotation = spins * Math.PI * 2;
-      const startRotation = rotation;
-      const startTime = performance.now();
-      
-      function animate(now) {
-        const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - t, 3);
-        rotation = startRotation + totalRotation * ease;
-        
-        drawWheel();
-        
-        if (t < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          const idx = getWinner();
-          resultDisplay.innerHTML = `🎉 Winner: <span style="color:#e74c3c; font-size:1.8rem">${items[idx]}</span>`;
-          isSpinning = false;
-          spinBtn.disabled = false;
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-    
-    spinBtn.addEventListener('click', spinWheel);
-    updateBtn.addEventListener('click', () => {
-      rotation = 0;
-      resultDisplay.textContent = '';
-      debugInfo.textContent = '';
-      drawWheel();
+}
+
+function updateDisplay() {
+
+  historyList.innerHTML = "";
+
+  if (history.length === 0) {
+
+    historyList.textContent = "No winners yet.";
+
+  } else {
+
+    history.forEach((winner, index) => {
+
+      const line = document.createElement("div");
+
+      line.textContent =
+        `${index + 1}. ${winner}`;
+
+      historyList.appendChild(line);
+
     });
-    
+
+  }
+
+  remainingDisplay.textContent =
+    `Remaining slots: ${remaining.length} / 8`;
+
+  spinBtn.disabled =
+    isSpinning || remaining.length === 0;
+
+  updateBtn.disabled = isSpinning;
+  resetBtn.disabled = isSpinning;
+
+  textarea.disabled = isSpinning;
+}
+
+function spinWheel() {
+
+  if (isSpinning || remaining.length === 0) {
+    return;
+  }
+
+  isSpinning = true;
+
+  updateDisplay();
+
+  resultDisplay.textContent = "🎰 Drawing...";
+
+  const duration = 4500;
+
+  const startRotation = rotation;
+
+  // Choose a random remaining slot
+
+  const randomIndex =
+    Math.floor(Math.random() * remaining.length);
+
+  const selectedItem = remaining[randomIndex];
+
+  const selectedIndex =
+    items.indexOf(selectedItem);
+
+  // Aim the selected segment center at the top pointer.
+
+  const currentNormalized =
+    ((rotation % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
+
+  const targetAngle =
+    (
+      FULL_CIRCLE -
+      (selectedIndex + 0.5) * SLICE_ANGLE
+    ) % FULL_CIRCLE;
+
+  const currentAngle =
+    (FULL_CIRCLE - currentNormalized) % FULL_CIRCLE;
+
+  const extraRotation =
+    (targetAngle - currentAngle + FULL_CIRCLE) % FULL_CIRCLE;
+
+  const fullSpins =
+    5 + Math.floor(Math.random() * 4);
+
+  const totalRotation =
+    fullSpins * FULL_CIRCLE + extraRotation;
+
+  const startTime = performance.now();
+
+  function animate(now) {
+
+    const elapsed = now - startTime;
+
+    const t = Math.min(elapsed / duration, 1);
+
+    // Smooth ease-out animation
+
+    const ease =
+      1 - Math.pow(1 - t, 3);
+
+    rotation =
+      startRotation + totalRotation * ease;
+
     drawWheel();
-  </script>
+
+    if (t < 1) {
+
+      requestAnimationFrame(animate);
+
+    } else {
+
+      // Snap to the mathematically calculated target.
+      rotation = startRotation + totalRotation;
+
+      drawWheel();
+
+      const winnerIndex = getWinner();
+
+      const winner = items[winnerIndex];
+
+      // Record winner and remove from available slots.
+
+      history.push(winner);
+
+      remaining = remaining.filter(
+        item => item !== winner
+      );
+
+      resultDisplay.textContent =
+        `🎉 WINNER: ${winner}`;
+
+      isSpinning = false;
+
+      updateDisplay();
+
+    }
+
+  }
+
+  requestAnimationFrame(animate);
+
+}
+
+// Update wheel items
+
+updateBtn.addEventListener("click", () => {
+
+  if (isSpinning) return;
+
+  if (!loadItems()) return;
+
+  remaining = [...items];
+  history = [];
+  rotation = 0;
+
+  resultDisplay.textContent = "Ready to draw!";
+
+  drawWheel();
+  updateDisplay();
+
+});
+
+// Spin button
+
+spinBtn.addEventListener("click", spinWheel);
+
+// Reset button
+
+resetBtn.addEventListener("click", () => {
+
+  if (isSpinning) return;
+
+  remaining = [...items];
+  history = [];
+  rotation = 0;
+
+  resultDisplay.textContent = "Ready for a new draw!";
+
+  drawWheel();
+  updateDisplay();
+
+});
+
+// Initial setup
+
+loadItems();
+
+remaining = [...items];
+
+drawWheel();
+updateDisplay();
+
+</script>
+
 </body>
 </html>
